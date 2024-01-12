@@ -25,23 +25,18 @@ jugador_x_cambio = 0
 
 
 # ENEMIGO VARIABLES
-nave_enemiga = Enemigo("Photos/enemigo.png", random.randint(0, 736), random.randint(50, 200))
+# nave_enemiga = Enemigo("Photos/enemigo.png", random.randint(5, 736), random.randint(50, 200))
 enemigo_x_cambio = 0.3
 enemigo_y_cambio = 50
 
+lista_enemigos = []
+
+for i in range(4):
+    i = Enemigo("Photos/enemigo.png", random.randint(5, 736), random.randint(50, 200))
+    lista_enemigos.append(i)
+
 
 # BALA VARIABLES
-# bala_img = pygame.image.load("Photos/bala.png")
-# bala_x = 0
-# bala_y = 500
-# bala_x_cambio = 0
-# bala_y_cambio = 1
-# isVisible = False
-#
-# def disparo(x, y):
-#     global isVisible
-#     isVisible = True
-#     pantalla.blit(bala_img, (x + 16, y + 10))
 bala = Bala("Photos/bala.png")
 
 
@@ -76,7 +71,7 @@ while se_ejecuta:
                 jugador_x_cambio = 0.2
             if event.key == pygame.K_SPACE:
                 if not bala.isVisible:
-                    bala.bala_x = nave.jugador_x
+                    bala.posicion_x = nave.posicion_x
                     bala.disparo(pantalla)
 
         # SOLTAR FLECHAS
@@ -88,38 +83,43 @@ while se_ejecuta:
     # MODIFICAR UBICACION JUGADOR
     nave.setPosition(jugador_x_cambio)
 
-    # MODIFICAR UBICACION ENEMIGO
-    nave_enemiga.setPosition_x(enemigo_x_cambio)
+
+    for e in lista_enemigos:
+        # MODIFICAR UBICACION ENEMIGO
+        e.setPosition_x(enemigo_x_cambio)
+
+        # MANTENER ENEMIGO DENTRO DE PANTALLA
+        if e.posicion_x <= 0:
+            enemigo_x_cambio = 0.2
+            e.posicion_y += enemigo_y_cambio
+        elif e.posicion_x >= 736:
+            enemigo_x_cambio = -0.2
+            e.posicion_y += enemigo_y_cambio
+
+        # Colision
+        colision = hay_colision(e.posicion_x, bala.posicion_x, e.posicion_y, bala.posicion_y)
+        if colision:
+            bala.posicion_y = 500
+            bala.isVisible = False
+            puntaje += 1
+            print(f"Puntaje: {puntaje}")
+            e.setPosition_x(random.randint(0, 700))
+            e.setPosition_y(random.randint(50, 500))
+            print(f"Nave enemiga: x: {e.posicion_x}, y: {e.posicion_y}")
+
+        e.enemigo(pantalla)
+
 
     # MANTENER DENTRO DE PANTALLA
-    if nave_enemiga.enemigo_x <= 0:
-        enemigo_x_cambio = 0.2
-        nave_enemiga.enemigo_y += enemigo_y_cambio
-    elif nave_enemiga.enemigo_x >= 734:
-        enemigo_x_cambio = -0.2
-        nave_enemiga.enemigo_y += enemigo_y_cambio
-
-
-    # MANTENER DENTRO DE PANTALLA
-    if bala.bala_y <= -64:
-        bala.bala_y = 500
+    if bala.posicion_y <= -64:
+        bala.posicion_y = 500
         bala.isVisible = False
     if bala.isVisible:
         bala.disparo(pantalla)
-        bala.bala_y -= bala.bala_y_cambio
-
-    # Colision
-    colision = hay_colision(nave_enemiga.enemigo_x, bala.bala_x, nave_enemiga.enemigo_y, bala.bala_y)
-    if colision:
-        bala.bala_y = 500
-        bala.isVisible = False
-        puntaje += 1
-        print(f"Puntaje: {puntaje}")
-        nave_enemiga.setPosition_x(random.randint(50, 600))
-        nave_enemiga.setPosition_y(random.randint(50, 200))
+        bala.posicion_y -= bala.bala_y_cambio
 
     nave.jugador(pantalla)
-    nave_enemiga.enemigo(pantalla)
+
 
     # ACTUALIZAR
     pygame.display.update()

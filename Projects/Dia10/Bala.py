@@ -3,8 +3,8 @@ import pygame
 
 class Bala:
     isVisible = False
-    bala_x = 0
-    bala_y = 500
+    posicion_x = 0
+    posicion_y = 500
     bala_x_cambio = 0
     bala_y_cambio = 1
 
@@ -13,4 +13,4 @@ class Bala:
 
     def disparo(self, pantalla):
         self.isVisible = True
-        pantalla.blit(self.bala_img, (self.bala_x + 16, self.bala_y + 10))
+        pantalla.blit(self.bala_img, (self.posicion_x + 16, self.posicion_y + 10))
