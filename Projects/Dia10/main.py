@@ -1,11 +1,11 @@
 import math
 import random
-
+import pygame
+from pygame import mixer
 from Bala import *
 from Jugador import *
 from Enemigo import *
-import pygame
-from pygame import mixer
+
 
 # INICIAR GAME
 pygame.init()
@@ -36,8 +36,13 @@ for i in range(8):
     lista_enemigos.append(i)
 
 # BALA VARIABLES
-bala = Bala("Photos/bala.png")
 balas = []
+img_bala = pygame.image.load("Photos/bala.png")
+bala_x = 0
+bala_y = 500
+bala_x_cambio = 0
+bala_y_cambio = 3
+bala_visible = False
 
 
 # DETECTAR COLISIONES
@@ -94,12 +99,17 @@ while se_ejecuta:
             if event.key == pygame.K_RIGHT:
                 jugador_x_cambio = 0.2
 
+            # Disparar balance
             if event.key == pygame.K_SPACE:
                 sonido_disparo = mixer.Sound('Music/disparo.mp3')
                 sonido_disparo.play()
-                if not bala.isVisible:
-                    bala.posicion_x = nave.posicion_x
-                    bala.disparo(pantalla)
+
+                nueva_bala = {
+                        "x": nave.posicion_x,
+                        "y": nave.posicion_y,
+                        "velocidad": -5
+                }
+                balas.append(nueva_bala)
 
         # SOLTAR FLECHAS
         if event.type == pygame.KEYUP:
@@ -109,12 +119,15 @@ while se_ejecuta:
     # MODIFICAR UBICACION JUGADOR
     nave.setPosition(jugador_x_cambio)
 
+
+
     for e in lista_enemigos:
         # FIN DEL JUEGO
         dead = hay_colision(e.posicion_x, nave.posicion_x, e.posicion_y, nave.posicion_y)
         if dead:
-            lista_enemigos.clear()
             texto_final()
+            lista_enemigos.clear()
+            balas.clear()
             break
 
         # MODIFICAR UBICACION ENEMIGO
@@ -129,27 +142,31 @@ while se_ejecuta:
             e.posicion_y += e.posicion_y_cambio
 
         # Colision
-        shot = hay_colision(e.posicion_x, bala.posicion_x, e.posicion_y, bala.posicion_y)
-
-        if shot and bala.isVisible:
-            sonido_colision = mixer.Sound("Music/Golpe.mp3")
-            sonido_colision.play()
-            bala.posicion_y = 500
-            bala.isVisible = False
-            puntaje += 1
-            print(f"Puntaje: {puntaje}")
-            e.setPosition_x(random.randint(0, 706))
-            e.setPosition_y(random.randint(50, 200))
+        for bala in balas:
+            shot = hay_colision(e.posicion_x, bala['x'], e.posicion_y, bala['y'])
+            if shot:
+                sonido_colision = mixer.Sound("Music/Golpe.mp3")
+                sonido_colision.play()
+                balas.remove(bala)
+                puntaje += 1
+                print(f"Puntaje: {puntaje}")
+                e.setPosition_x(random.randint(0, 706))
+                e.setPosition_y(random.randint(50, 200))
+                break
 
         e.enemigo(pantalla)
 
-    # MANTENER DENTRO DE PANTALLA
-    if bala.posicion_y <= -64:
-        bala.posicion_y = 500
-        bala.isVisible = False
-    if bala.isVisible:
-        bala.disparo(pantalla)
-        bala.posicion_y -= bala.bala_y_cambio
+    # Movimiento bala
+    for bala in balas:
+        bala["y"] += bala["velocidad"]
+        pantalla.blit(img_bala, (bala["x"] + 16, bala["y"] + 10))
+        if bala["y"] < 0:
+            balas.remove(bala)
+    for bala in balas:
+        bala["y"] += bala["velocidad"]
+        pantalla.blit(img_bala, (bala["x"] + 16, bala["y"] + 10))
+        if bala["y"] < 0:
+            balas.remove(bala)
 
     nave.jugador(pantalla)
 
